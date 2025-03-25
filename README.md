@@ -20,7 +20,7 @@ I would also add more alerts to let the user know their request was accomplished
 
 ---
 
-## 🛠 Prerequisites
+## Prerequisites
 Ensure you have the following installed:
 - [Node.js](https://nodejs.org/) (v18+ recommended)
 - [PostgreSQL](https://www.postgresql.org/)
