@@ -112,6 +112,6 @@ Ensure you have the following installed:
 
 ---
 
-## ✨ Contact
+## Contact
 For any questions, reach out via email.
 
