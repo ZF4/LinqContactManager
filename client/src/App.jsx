@@ -9,6 +9,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
   const [emailError, setEmailError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const fetchContacts = async () => {
     try {
@@ -23,6 +24,14 @@ function App() {
   useEffect(() => {
     fetchContacts();
   }, []);
+
+  const filteredContacts = contacts.filter(contact => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      contact.name.toLowerCase().includes(searchLower) ||
+      (contact.email && contact.email.toLowerCase().includes(searchLower))
+    );
+  });
 
   const checkEmailExists = async (email, excludeId = null) => {
     try {
@@ -120,22 +129,41 @@ function App() {
         </button>
       </div>
       
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search contacts..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="search-input"
+        />
+        {searchTerm && (
+          <button 
+            className="clear-search" 
+            onClick={() => setSearchTerm('')}
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
+      </div>
+
       {error && <div className="error">{error}</div>}
 
       <div className="contacts-list">
         <h2>Contacts</h2>
-        {contacts.length === 0 ? (
-          <p>No contacts yet. Click the Add Contact button to get started!</p>
+        {filteredContacts.length === 0 ? (
+          <p>{searchTerm ? 'No contacts found matching your search.' : 'No contacts yet. Click the Add Contact button to get started!'}</p>
         ) : (
           <div className="contacts-grid">
-            {contacts.map(contact => (
+            {filteredContacts.map(contact => (
               <div 
                 key={contact.id} 
                 className="contact-card"
                 onClick={() => openEditModal(contact)}
               >
                 <h3>{contact.name}</h3>
-                {contact.email && <p>📧 {contact.email}</p>}
+                {contact.email && <p>{contact.email}</p>}
               </div>
             ))}
           </div>
