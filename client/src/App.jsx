@@ -4,9 +4,11 @@ import './App.css';
 
 function App() {
   const [contacts, setContacts] = useState([]);
-  const [newContact, setNewContact] = useState({ name: '', email: '' });
+  const [currentContact, setCurrentContact] = useState({ name: '', email: '' });
   const [error, setError] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('add'); // 'add' or 'edit'
+  const [emailError, setEmailError] = useState('');
 
   const fetchContacts = async () => {
     try {
@@ -22,32 +24,98 @@ function App() {
     fetchContacts();
   }, []);
 
+  const checkEmailExists = async (email, excludeId = null) => {
+    try {
+      const params = { email };
+      if (excludeId) params.excludeId = excludeId;
+      
+      const response = await axios.get("http://localhost:8080/api/contacts/check-email", { params });
+      return response.data.exists;
+    } catch (err) {
+      console.error('Error checking email:', err);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setEmailError('');
+    setError('');
+
     try {
-      await axios.post("http://localhost:8080/api/contacts", newContact);
-      setNewContact({ name: '', email: '' });
+      // Check if email exists
+      const emailExists = await checkEmailExists(
+        currentContact.email, 
+        modalMode === 'edit' ? currentContact.id : null
+      );
+
+      if (emailExists) {
+        setEmailError('A contact with this email already exists');
+        return;
+      }
+
+      if (modalMode === 'add') {
+        await axios.post("http://localhost:8080/api/contacts", currentContact);
+      } else {
+        await axios.put(`http://localhost:8080/api/contacts/${currentContact.id}`, currentContact);
+      }
+      setCurrentContact({ name: '', email: '' });
       setIsModalOpen(false);
       fetchContacts();
     } catch (err) {
-      setError('Failed to add contact');
-      console.error('Error adding contact:', err);
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else {
+        setError(`Failed to ${modalMode} contact`);
+      }
+      console.error(`Error ${modalMode}ing contact:`, err);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://localhost:8080/api/contacts/${currentContact.id}`);
+      setCurrentContact({ name: '', email: '' });
+      setIsModalOpen(false);
+      fetchContacts();
+    } catch (err) {
+      setError('Failed to delete contact');
+      console.error('Error deleting contact:', err);
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setNewContact(prev => ({
+    setCurrentContact(prev => ({
       ...prev,
       [name]: value
     }));
+    // Clear errors when user starts typing
+    if (name === 'email') setEmailError('');
+    setError('');
+  };
+
+  const openAddModal = () => {
+    setCurrentContact({ name: '', email: '' });
+    setModalMode('add');
+    setIsModalOpen(true);
+    setEmailError('');
+    setError('');
+  };
+
+  const openEditModal = (contact) => {
+    setCurrentContact(contact);
+    setModalMode('edit');
+    setIsModalOpen(true);
+    setEmailError('');
+    setError('');
   };
 
   return (
     <div className="container">
       <div className="header">
         <h1>ZF x Linq</h1>
-        <button className="add-button" onClick={() => setIsModalOpen(true)}>
+        <button className="add-button" onClick={openAddModal}>
           +
         </button>
       </div>
@@ -61,9 +129,13 @@ function App() {
         ) : (
           <div className="contacts-grid">
             {contacts.map(contact => (
-              <div key={contact.id} className="contact-card">
+              <div 
+                key={contact.id} 
+                className="contact-card"
+                onClick={() => openEditModal(contact)}
+              >
                 <h3>{contact.name}</h3>
-                {contact.email && <p>{contact.email}</p>}
+                {contact.email && <p>📧 {contact.email}</p>}
               </div>
             ))}
           </div>
@@ -71,10 +143,10 @@ function App() {
       </div>
 
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Add New Contact</h2>
+              <h2>{modalMode === 'add' ? 'Add New Contact' : 'Edit Contact'}</h2>
               <button className="close-button" onClick={() => setIsModalOpen(false)}>×</button>
             </div>
             <form onSubmit={handleSubmit} className="contact-form">
@@ -82,7 +154,7 @@ function App() {
                 <input
                   type="text"
                   name="name"
-                  value={newContact.name}
+                  value={currentContact.name}
                   onChange={handleChange}
                   placeholder="Name"
                   required
@@ -92,17 +164,26 @@ function App() {
                 <input
                   type="email"
                   name="email"
-                  value={newContact.email}
+                  value={currentContact.email}
                   onChange={handleChange}
                   placeholder="Email"
                   required
+                  className={emailError ? 'error-input' : ''}
                 />
+                {emailError && <div className="field-error">{emailError}</div>}
               </div>
               <div className="modal-footer">
                 <button type="button" className="cancel-button" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit">Add Contact</button>
+                {modalMode === 'edit' && (
+                  <button type="button" className="delete-button" onClick={handleDelete}>
+                    Delete
+                  </button>
+                )}
+                <button type="submit">
+                  {modalMode === 'add' ? 'Add Contact' : 'Save Changes'}
+                </button>
               </div>
             </form>
           </div>
