@@ -12,6 +12,11 @@ Lastly I added checks to make sure duplicate entries (emails) would be accounted
 The biggest improvement I would look to make is the UI. Primarily the home page.
 I would also add more alerts to let the user know their request was accomplished such as making an edit.
 
+## Demo
+<video src="https://jmp.sh/s/fxZQq10OVcVU1cgOOaEd" width="300" />
+
+
+
 ## Features
 - Add new contacts with name and email.
 - View all contacts.
