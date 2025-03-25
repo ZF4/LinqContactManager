@@ -13,7 +13,7 @@ The biggest improvement I would look to make is the UI. Primarily the home page.
 I would also add more alerts to let the user know their request was accomplished such as making an edit.
 
 ## Demo
-<video src="https://drive.google.com/file/d/17mu0OijFZC0ZlgA5UYo4qTsVCq_8TWEJ/view?usp=sharing" width="300" />
+https://github.com/user-attachments/assets/cee686a8-baa6-4c4a-9d32-d731a1e039b9
 
 
 
@@ -80,6 +80,10 @@ Ensure you have the following installed:
     
     CREATE TABLE contacts (
       id SERIAL PRIMARY KEY,
+
+
+
+
       name VARCHAR(255) NOT NULL,
       email VARCHAR(255) UNIQUE NOT NULL
     );
